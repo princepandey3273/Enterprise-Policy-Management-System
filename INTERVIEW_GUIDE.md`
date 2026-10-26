@@ -1,0 +1,77 @@
+# 🎓 Interview Guide: Enterprise Document Intelligence Platform
+
+This document serves as a comprehensive guide for technical interviews based on the development of the Enterprise Document Intelligence Platform. It covers the implementation details, architectural decisions, and high-level system design.
+
+---
+
+## 🛠 Part 1: Project Specifics (The "How it Works")
+
+### 1. Can you explain the high-level architecture of your project?
+**Answer:** The project is a RAG (Retrieval-Augmented Generation) pipeline. It consists of:
+- **Frontend**: A vanilla JS/CSS interface for document upload and querying.
+- **Backend**: A Spring Boot application handling PDF processing and API orchestration.
+- **Vector Store**: PostgreSQL with the `pgvector` extension for semantic search.
+- **AI Layer**: Google Gemini API for both generating embeddings (vectorization) and generating final responses (LLM).
+
+### 2. What is the flow of data when a user uploads a PDF?
+**Answer:**
+1. **Ingestion**: The PDF is uploaded via a POST request.
+2. **Processing**: Apache PDFBox extracts the raw text.
+3. **Chunking**: The text is split into smaller segments (e.g., 1000 characters) to fit within the LLM's context window and improve retrieval precision.
+4. **Vectorization**: Each chunk is sent to the Google Embedding API to be converted into a high-dimensional vector (3072 dimensions).
+5. **Storage**: The text chunk and its corresponding vector are stored in PostgreSQL using the `vector` data type.
+
+### 3. How does the "Ask" functionality work?
+**Answer:**
+1. **Query Embedding**: The user's question is converted into a vector using the same embedding model used for the documents.
+2. **Semantic Search**: A cosine distance query (`<=>` operator in pgvector) finds the top-K (e.g., 3) chunks in the database that are mathematically closest to the query vector.
+3. **Augmentation**: These chunks are retrieved as "Context."
+4. **Generation**: A prompt is constructed: `Context: [Chunks] + Question: [User Query]`. This is sent to Gemini, which generates a grounded response based *only* on the provided context.
+
+---
+
+## 🧠 Part 2: LLM & RAG Deep Dive
+
+### 4. How do you tackle "Hallucinations" in this system?
+**Answer:** Hallucinations occur when an LLM generates confident but false information. I tackled this using:
+- **Grounded Prompting**: I explicitly instruct the model: *"Use the following context to answer. If the answer is not in the context, say that you don't know."*
+- **Context Limitation**: By providing only the most relevant chunks, I reduce the noise the model has to process.
+- **Verification**: In a production system, I would implement "Citations," where the AI must reference which chunk it used to derive the answer.
+
+### 5. What is "Temperature" in the context of LLMs?
+**Answer:** Temperature controls the randomness of the output:
+- **Low Temperature (e.g., 0.1 - 0.3)**: Makes the model deterministic and focused. It chooses the most likely next token. This is **essential for RAG** because we want factual, consistent answers.
+- **High Temperature (e.g., 0.7 - 1.0)**: Makes the model more creative and diverse. This is better for poetry or brainstorming, but bad for technical document retrieval.
+
+### 6. Why did you choose `pgvector` over a dedicated vector DB like Pinecone or Milvus?
+**Answer:**
+- **Simplicity**: Since we already needed a relational database for metadata, using PostgreSQL with `pgvector` avoided the "distributed system tax" (managing two separate databases).
+- **ACID Compliance**: We get transactional integrity for our document metadata.
+- **Cost**: It's open-source and can be hosted on existing Postgres infrastructure.
+
+---
+
+## 🚀 Part 3: System Design & Scalability
+
+### 7. How would you scale this system to handle 1 million documents?
+**Answer:**
+- **Indexing Bottleneck**: Currently, embeddings are generated synchronously. I would move this to an **Asynchronous Worker pattern** using a message queue (RabbitMQ/Kafka).
+- **Search Performance**: I would implement a **HNSW (Hierarchical Navigable Small World)** index in pgvector to move from "Exact Search" (slow) to "Approximate Nearest Neighbor (ANN)" search (extremely fast).
+- **Caching**: Implement a **Redis cache** for frequent queries to avoid redundant LLM API calls.
+- **Load Balancing**: Deploy the Spring Boot app in a Kubernetes cluster to scale horizontally.
+
+### 8. What happens if the PDF is 1,000 pages long? (The Context Window Problem)
+**Answer:** You cannot send 1,000 pages to an LLM. The solution is **Recursive Character Text Splitting** and **Overlapping**. By adding an overlap (e.g., 100 characters) between chunks, we ensure that a piece of information split across two chunks isn't "lost" and maintains its meaning.
+
+---
+
+## 🚩 Part 4: "The Struggle" (Scenario-based Questions)
+
+### 9. What was the hardest bug you faced in this project?
+**Answer:** (Use the actual bug we fixed!) *"The most challenging issue was a Type Mismatch between the Java application and the PostgreSQL database. I initially defined the embedding column as TEXT, but pgvector requires a specific VECTOR type for distance calculations. This caused a 500 error. I solved it by implementing a native SQL cast (`cast(:embedding as vector)`) and updating the database schema to match the API's output dimensions (3072)."*
+
+### 10. If the AI is giving wrong answers even though the document is uploaded, how do you debug it?
+**Answer:** I would investigate the **Retrieval Quality**:
+1.  **Check the Top-K Chunks**: Log the chunks being retrieved. If the "correct" answer isn't in those 3 chunks, the problem is the **Embedding Model** or the **Chunking Strategy**.
+2.  **Adjust Chunk Size**: If chunks are too small, they lack context. If too large, they introduce noise.
+3.  **Query Expansion**: Use the LLM to rewrite the user's question into a better search query before hitting the database.

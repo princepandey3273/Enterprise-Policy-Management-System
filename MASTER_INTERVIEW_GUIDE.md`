@@ -1,0 +1,86 @@
+# 🏆 Master Interview Guide: Enterprise AI & RAG Specialist
+
+This is the comprehensive "Gold Standard" guide for your interviews. I have broken this down into **Core Concepts (Theory)**, **Technical Implementation (The How)**, **Scenario-Based Challenges (The Debugging)**, and **System Design (The Scale)**.
+
+---
+
+## 🟦 PART 1: Core Concepts (The "What & Why")
+*These are the foundational questions. Answer these with precision and terminology.*
+
+### 1. General RAG
+- **What is RAG?** Retrieval-Augmented Generation. It's a technique that grants an LLM access to specific, external data (like your PDFs) without needing to retrain the model.
+- **Why do we need RAG?** LLMs have a "cutoff date" for knowledge and can hallucinate. RAG provides "ground truth" context, ensuring the AI's answer is based on real documents, not training-set guesses.
+- **What are the primary limitations of RAG?**
+    - **Retrieval Noise**: If the search retrieves irrelevant chunks, the AI will give a wrong answer.
+    - **Context Window**: You can't feed 1,000 pages into an LLM; you must be precise about what you retrieve.
+    - **Latency**: Adding a DB search and a second LLM call increases the time to respond.
+
+### 2. Vector Embeddings & Similarity
+- **What is a Vector Embedding?** A mathematical representation of text as a list of floating-point numbers (a vector). It captures the *semantic meaning* rather than just keywords.
+- **What is Semantic Search?** Searching by *meaning*. (e.g., searching for "vacation" will find chunks about "annual leave" even if the word "vacation" isn't used).
+- **What is Cosine Similarity?** A mathematical formula used to find the angle between two vectors. A smaller angle (cosine distance closer to 0) means the two pieces of text are more similar.
+- **What is the "Curse of Dimensionality"?** As vector dimensions increase (e.g., from 768 to 3072), the distance between all points becomes more uniform, making search harder. This is why specialized indices like HNSW are needed.
+
+### 3. Chunking Strategy
+- **What is Chunking?** Breaking a long document into smaller pieces.
+- **Why not just use the whole document?** To stay within the LLM's context window and to ensure the retrieved context is highly relevant to the specific question.
+- **What is "Overlap"?** Including a few sentences from the end of Chunk 1 at the start of Chunk 2. This prevents "cutting a fact in half" and preserves the context across boundaries.
+
+---
+
+## 🟩 PART 2: Implementation & Technicals (The "How")
+*These focus on your specific tech stack: Spring Boot, pgvector, Gemini.*
+
+### 1. The Database (pgvector)
+- **Why pgvector over a dedicated Vector DB?** Lower architectural complexity. You get relational data (metadata) and vector data in one ACID-compliant system.
+- **How does pgvector store data?** It adds a `vector` data type to PostgreSQL.
+- **What is the `vector(3072)` definition?** It tells Postgres that every entry in that column must be an array of exactly 3072 floating-point numbers.
+
+### 2. The AI Layer (Gemini)
+- **Embedding Model vs Generative Model**: We use one model to *create the coordinates* (Embedding) and another to *read the coordinates and talk* (Generative).
+- **Temperature's role**: We set it low (0.1-0.3) for RAG to stop the AI from being "creative" with company policies.
+- **Prompt Engineering**: The "System Prompt" is used to force the AI to stay grounded in the context.
+
+---
+
+## 🟧 PART 3: Scenario-Based Questions (The "Problem Solving")
+*Interviewers ask these to see if you actually built the project or just copied it.*
+
+### Scenario 1: "The AI is giving a generic answer, ignoring the PDF."
+- **Diagnosis**: The retrieval step failed. The "Top-K" chunks retrieved from the DB were not relevant.
+- **Solution**: Check the embedding model. Ensure the question and the document were embedded using the *exact same model*. If they differ, the vectors live in different "spaces" and will never match.
+
+### Scenario 2: "The system crashes when uploading a 500MB PDF."
+- **Diagnosis**: Memory overflow. Loading a massive PDF into RAM all at once crashes the JVM.
+- **Solution**: Implement **Streaming PDF Parsing**. Instead of `file.getBytes()`, use an `InputStream` to process the PDF page-by-page.
+
+### Scenario 3: "The AI finds the right chunk, but the answer is incomplete."
+- **Diagnosis**: The chunk size is too small, cutting off the end of the answer.
+- **Solution**: Increase the **Chunk Size** or increase the **Overlap** so the AI has more surrounding context.
+
+### Scenario 4: "The user asks a question and gets a '500 Internal Server Error'."
+- **Diagnosis**: Likely a Vector Dimension Mismatch or an API Timeout.
+- **Solution**: Check logs. If it's a dimension error, the DB schema needs to match the API output. If it's a timeout, implement a **Retry Mechanism** or a **Circuit Breaker**.
+
+---
+
+## 🟥 PART 4: System Design & Scalability (The "Architect")
+*For Senior/Mid-level roles. Focus on bottlenecks.*
+
+### 1. Latency Optimization
+- **The Problem**: API calls to Gemini are slow.
+- **The Fix**:
+    - **Redis Caching**: Store common (Question $\rightarrow$ Answer) pairs.
+    - **Parallel Processing**: Generate embeddings for multiple chunks in parallel using `CompletableFuture` in Java.
+
+### 2. Scaling to Millions of Documents
+- **The Problem**: Exact cosine search (`ORDER BY embedding <=> ...`) becomes too slow (O(n)).
+- **The Fix**: Implement **HNSW (Hierarchical Navigable Small World)** indices. This creates a "graph" of vectors, allowing the DB to jump to the right neighborhood instantly (Approximate Nearest Neighbor).
+
+### 3. Handling Multiple Users & Privacy
+- **The Problem**: User A shouldn't see answers from User B's private PDFs.
+- **The Fix**: **Multi-tenancy**. Add a `user_id` column to the `document_chunks` table and add `WHERE user_id = ?` to every retrieval query.
+
+### 4. Reliability
+- **The Problem**: Gemini API goes down.
+- **The Fix**: **Model Fallback**. If Gemini fails, fallback to a local model (like Llama 3 via Ollama) or a secondary provider (like OpenAI) to ensure 99.9% uptime.

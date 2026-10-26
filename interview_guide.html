@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Guide | DocIntel AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bg-dark: #0A0B0D;
+            --bg-card: #161B22;
+            --border-color: #30363D;
+            --accent-blue: #3B82F6;
+            --text-main: #F0F4F8;
+            --text-muted: #8B949E;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Sora', sans-serif;
+            color: #fff;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 60px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 40px;
+        }
+
+        .guide-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            transition: transform 0.2s ease;
+        }
+
+        .guide-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-4px);
+        }
+
+        .question {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--accent-blue);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .answer {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-blue);
+            color: #d1d5db;
+            font-size: 0.95rem;
+        }
+
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            color: #a5d6ff;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin: 10px 0;
+            display: block;
+            border: 1px solid var(--border-color);
+        }
+
+        .tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .sidebar-nav {
+            position: sticky;
+            top: 20px;
+        }
+
+        .nav-link-custom {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: block;
+            padding: 8px 0;
+            transition: color 0.2s;
+        }
+
+        .nav-link-custom:hover {
+            color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero-section text-center">
+        <div class="container">
+            <span class="badge bg-primary mb-3">INTERVIEW READINESS</span>
+            <h1 class="display-4 fw-bold">DocIntel AI Technical Guide</h1>
+            <p class="lead text-muted">Comprehensive preparation for system design and implementation interviews</p>
+        </div>
+    </div>
+
+    <div class="container mb-5">
+        <div class="row">
+            <!-- Navigation -->
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="sidebar-nav">
+                    <h6 class="text-uppercase fw-bold mb-3" style="color: var(--text-muted);">Sections</h6>
+                    <a href="#part1" class="nav-link-custom">1. Project Specifics</a>
+                    <a href="#part2" class="nav-link-custom">2. LLM & RAG Deep Dive</a>
+                    <a href="#part3" class="nav-link-custom">3. System Design</a>
+                    <a href="#part4" class="nav-link-custom">4. Problem Solving</a>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="col-lg-9">
+
+                <!-- Part 1 -->
+                <div id="part1" class="mb-5">
+                    <h2 class="mb-4"><i class="bi bi-gear-wide-connected me-2"></i>Project Specifics</h2>
+
+                    <div class="guide-card">
+                        <span class="tag">Architecture</span>
+                        <div class="question"><i class="bi bi-question-circle"></i> Can you explain the high-level architecture?</div>
+                        <div class="answer">
+                            The project is a RAG pipeline. It uses <b>Spring Boot</b> for the backend, <b>PostgreSQL + pgvector</b> for semantic storage, and <b>Google Gemini</b> for embedding and generation. The flow is: Ingestion &rarr; Chunking &rarr; Vectorization &rarr; Storage &rarr; Retrieval &rarr; LLM Response.
+                        </div>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="tag">Data Flow</span>
+                        <div class="question"><i class="bi bi-question-circle"></i> What is the flow of data during PDF upload?</div>
+                        <div class="answer">
+                            PDF &rarr; Apache PDFBox (Text Extraction) &rarr; Text Splitter (Chunking) &rarr; Gemini API (Embedding) &rarr; pgvector (Storage).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 2 -->
+                <div id="part2" class="mb-5">
+                    <h2 class="mb-4"><i class="bi bi-brain me-2"></i>LLM & RAG Deep Dive</h2>
+
+                    <div class="guide-card">
+                        <span class="tag">Reliability</span>
+                        <div class="question"><i class="bi bi-question-circle"></i> How do you tackle Hallucinations?</div>
+                        <div class="answer">
+                            Through <b>Grounded Prompting</b>. I explicitly tell the LLM to use only the provided context and to say "I don't know" if the answer isn't present. This transforms the LLM from a "creative writer" into a "document retriever."
+                        </div>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="tag">Hyperparameters</span>
+                        <div class="question"><i class="bi bi-question-circle"></i> What is Temperature?</div>
+                        <div class="answer">
+                            Temperature controls randomness. For this project, we use <b>Low Temperature (0.1-0.3)</b> to ensure factual, consistent, and deterministic answers, which is critical for enterprise documents.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 3 -->
+                <div id="part3" class="mb-5">
+                    <h2 class="mb-4"><i class="bi bi-diagram-3 me-2"></i>System Design & Scalability</h2>
+
+                    <div class="guide-card">
+                        <span class="tag">Scaling</span>
+                        <div class="question"><i class="bi,bi-question-circle"></i> How to scale to 1 million documents?</div>
+                        <div class="answer">
+                            1. <b>Async Processing</b>: Use Kafka/RabbitMQ for embedding generation.<br>
+                            2. <b>ANN Search</b>: Implement <b>HNSW index</b> in pgvector to replace exact search with Approximate Nearest Neighbor search.<br>
+                            3. <b>Caching</b>: Use Redis for common queries.
+                        </div>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="tag">Optimization</span>
+                        <div class="question"><i class="bi bi-question-circle"></i> How to handle massive PDFs?</div>
+                        <div class="answer">
+                            Use a <b>Recursive Character Text Splitter</b> with <b>Overlap</b>. Overlapping ensures that context is not lost when a sentence is split between two chunks.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 4 -->
+                <div id="part4" class="mb-5">
+                    <h2 class="mb-4"><i class="bi bi-bug me-2"></i>Problem Solving</h2>
+
+                    <div class="guide-card">
+                        <span class="tag">Debugging</span>
+                        <div class="question"><i class="bi bi-question-circle"></i> Describe a difficult bug you solved.</div>
+                        <div class="answer">
+                            I faced a <b>Vector Dimension Mismatch</b> (Expected 768, got 3072). I diagnosed this by analyzing the pgvector SQLState error. I resolved it by updating the Java Entity definition and performing a schema migration to align the DB with the Gemini API's output.
+                            <div class="code-block">
+                                ALTER TABLE document_chunks ALTER COLUMN embedding TYPE vector(3072);
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocIntel | Enterprise Intelligence</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Left Sidebar: Indexing Tools -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">DI</span>
+                    <span class="logo-text">DocIntel</span>
+                </div>
+                <div class="version-tag">v1.0.4</div>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="tool-section">
+                    <label class="section-label">KNOWLEDGE BASE</label>
+
+                    <div class="custom-file-upload">
+                        <input type="file" id="fileInput" accept=".pdf" class="hidden-input">
+                        <label for="fileInput" class="upload-box">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span>Select PDF Document</span>
+                            <small id="fileNameDisplay">No file chosen</small>
+                        </label>
+                    </div>
+
+                    <button onclick="uploadFile()" class="btn-index">
+                        Index Document <i class="bi bi-arrow-right"></i>
+                    </button>
+
+                    <div id="uploadStatus" class="status-message"></div>
+                </div>
+
+                <div class="stats-section">
+                    <div class="stat-item">
+                        <span class="stat-label">Status</span>
+                        <span class="stat-value text-success">Ready</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">API</span>
+                        <span class="stat-value">Gemini 3.6</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">P</div>
+                    <div class="user-info">
+                        <span class="user-name">Prince Pandey</span>
+                        <span class="user-role">Administrator</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content: Chat Interface -->
+        <main class="main-content">
+            <nav class="top-nav">
+                <div class="nav-title">Enterprise Intelligence Terminal</div>
+                <div class="nav-actions">
+                    <span class="online-indicator">● Online</span>
+                </div>
+            </nav>
+
+            <div id="chatWindow" class="chat-window">
+                <div class="message bot">
+                    <div class="msg-meta">Assistant</div>
+                    <div class="msg-content">
+                        System initialized. Please index a document to begin semantic retrieval.
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <div class="input-wrapper">
+                    <input type="text" id="userInput" placeholder="Enter query for the indexed corpus...">
+                    <button onclick="askQuestion()" class="send-btn">
+                        <i class="bi bi-send"></i>
+                    </button>
+                </div>
+                <div class="input-footer">
+                    <span>Press Enter to send</span>
+                    <span>Powered by Google Gemini & pgvector</span>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
